@@ -9,7 +9,7 @@
   [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 
   **The universal quality standard for AI agent skills.**<br />
-  Evaluate any SKILL.md — from [skills.sh](https://skills.sh), [ClaHub](https://clawhub.com), GitHub, or your local machine.
+  Evaluate any SKILL.md — from [skills.sh](https://skills.sh), [ClawHub](https://clawhub.com), GitHub, or your local machine.
 
 </div>
 

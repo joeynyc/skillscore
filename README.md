@@ -1,11 +1,19 @@
-# 📊 SkillScore
+<div align="center">
+  <img src="assets/banner.png" alt="SkillScore" width="100%" />
 
-[![npm version](https://badge.fury.io/js/skillscore.svg)](https://badge.fury.io/js/skillscore)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js CI](https://github.com/joeynyc/skillscore/workflows/Node.js%20CI/badge.svg)](https://github.com/joeynyc/skillscore/actions)
-[![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+  <br />
 
-A professional CLI tool that evaluates AI agent skills (like OpenClaw/Claude Code skills) and produces comprehensive quality scores.
+  [![npm version](https://badge.fury.io/js/skillscore.svg)](https://badge.fury.io/js/skillscore)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Node.js CI](https://github.com/joeynyc/skillscore/workflows/Node.js%20CI/badge.svg)](https://github.com/joeynyc/skillscore/actions)
+  [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
+
+  **The universal quality standard for AI agent skills.**<br />
+  Evaluate any SKILL.md — from [skills.sh](https://skills.sh), [ClaHub](https://clawhub.com), GitHub, or your local machine.
+
+</div>
+
+---
 
 ## ✨ Features
 

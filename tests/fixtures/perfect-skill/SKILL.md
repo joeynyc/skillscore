@@ -117,6 +117,12 @@ $ check-status
 ### Q: Slow response times
 **A:** API is experiencing high load, try again in a few minutes
 
+## When NOT to Use This Skill
+
+- **Don't use** this for detailed monitoring or alerting — use a dedicated monitoring skill instead
+- **Not for** deploying or restarting services; this is read-only status checking
+- **Avoid using this** for historical trend analysis
+
 ## Security Notes
 
 - API key is sensitive - never log or expose it

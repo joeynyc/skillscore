@@ -176,20 +176,39 @@ export class SkillScorer {
       });
     }
 
-    // File organization (2 points)
+    // File organization (1 point)
     let orgScore = 0;
-    if (skill.structure.totalFiles <= 20) orgScore += 0.5;
-    if (skill.structure.directories.length <= 5) orgScore += 0.5;
+    if (skill.structure.totalFiles <= 20) orgScore += 0.25;
+    if (skill.structure.directories.length <= 5) orgScore += 0.25;
     if (!skill.files.some(f => f.includes('tmp') || f.includes('temp') || f.includes('.log'))) {
-      orgScore += 1;
+      orgScore += 0.5;
     }
     
-    score += Math.round(orgScore * 2) / 2;
+    const orgPoints = Math.min(Math.round(orgScore * 2) / 2, 1);
+    score += orgPoints;
     findings.push({
-      type: orgScore >= 1.5 ? 'pass' : orgScore >= 1 ? 'warning' : 'fail',
+      type: orgScore >= 0.75 ? 'pass' : orgScore >= 0.5 ? 'warning' : 'fail',
       message: `File organization: ${skill.structure.totalFiles} files, ${skill.structure.directories.length} directories`,
-      points: Math.round(orgScore * 2) / 2
+      points: orgPoints
     });
+
+    // Artifact output spec (1 point)
+    const outputPatterns = ['output', 'artifact', 'write to', 'save to', 'generates', 'produces', '/output', 'result file', 'deliverable'];
+    const hasOutputSpec = outputPatterns.some(p => skill.skillMdContent.toLowerCase().includes(p));
+    if (hasOutputSpec) {
+      score += 1;
+      findings.push({
+        type: 'pass',
+        message: 'Defines output location or artifacts',
+        points: 1
+      });
+    } else {
+      findings.push({
+        type: 'fail',
+        message: 'No output/artifact specification found',
+        points: 0
+      });
+    }
 
     // Follows conventions (1 point)
     let conventionScore = 0;
@@ -384,16 +403,16 @@ export class SkillScorer {
       }
     }
 
-    // Unbounded loops (2 points)
+    // Unbounded loops (1 point)
     const loopPatterns = ['while true', 'for (;;)', 'infinite', 'forever'];
     const unboundedLoops = loopPatterns.filter(pattern => content.includes(pattern));
     
     if (unboundedLoops.length === 0) {
-      score += 2;
+      score += 1;
       findings.push({
         type: 'pass',
         message: 'No unbounded loops detected',
-        points: 2
+        points: 1
       });
     } else {
       const hasBreakCondition = content.includes('break') || content.includes('exit') || content.includes('timeout');
@@ -411,6 +430,35 @@ export class SkillScorer {
           points: 0
         });
       }
+    }
+
+    // Network containment (1 point)
+    const networkTerms = ['curl', 'wget', 'fetch', 'http', 'https', 'api', 'endpoint', 'request'];
+    const hasNetwork = networkTerms.some(term => content.includes(term));
+    if (hasNetwork) {
+      const containmentTerms = ['allowlist', 'whitelist', 'restrict', 'domain', 'scope', 'trusted', 'untrusted', 'sanitize', 'validate response'];
+      const hasContainment = containmentTerms.some(term => content.includes(term));
+      if (hasContainment) {
+        score += 1;
+        findings.push({
+          type: 'pass',
+          message: 'Network usage with containment measures',
+          points: 1
+        });
+      } else {
+        findings.push({
+          type: 'fail',
+          message: 'Network usage without containment measures',
+          points: 0
+        });
+      }
+    } else {
+      score += 1;
+      findings.push({
+        type: 'pass',
+        message: 'No network usage detected (containment N/A)',
+        points: 1
+      });
     }
 
     // Permissions (2 points)
@@ -618,30 +666,29 @@ export class SkillScorer {
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
 
-    // Single responsibility (3 points)
+    // Single responsibility (2 points)
     const wordCount = skill.description.split(' ').length;
     const hasMultipleVerbs = skill.description.match(/\b(and|or|also|plus|additionally)\b/gi);
     
     if (wordCount <= 50 && !hasMultipleVerbs) {
-      score += 3;
+      score += 2;
       findings.push({
         type: 'pass',
         message: 'Clear single responsibility focus',
-        points: 3
+        points: 2
       });
     } else if (wordCount <= 100) {
-      score += 2;
+      score += 1;
       findings.push({
         type: 'warning',
         message: 'Mostly focused but could be more specific',
-        points: 2
+        points: 1
       });
     } else {
-      score += 1;
       findings.push({
         type: 'fail',
         message: 'Scope appears too broad or unfocused',
-        points: 1
+        points: 0
       });
     }
 
@@ -665,16 +712,16 @@ export class SkillScorer {
       });
     }
 
-    // Specific triggers (3 points)
+    // Specific triggers (2 points)
     const triggerWords = ['when', 'if', 'trigger', 'activate', 'invoke', 'call', 'execute'];
     const hasTriggers = triggerWords.some(word => content.includes(word));
     
     if (hasTriggers) {
-      score += 3;
+      score += 2;
       findings.push({
         type: 'pass',
         message: 'Clear trigger conditions specified',
-        points: 3
+        points: 2
       });
     } else {
       score += 1;
@@ -682,6 +729,43 @@ export class SkillScorer {
         type: 'warning',
         message: 'Trigger conditions could be more specific',
         points: 1
+      });
+    }
+
+    // Negative examples / routing boundaries (2 points)
+    const negativePatterns = ["don't use", "do not use", "not for", "don't call", "instead use", "not when", "don't use when", "avoid using this"];
+    const hasNegativeExamples = negativePatterns.some(p => content.includes(p));
+    if (hasNegativeExamples) {
+      score += 2;
+      findings.push({
+        type: 'pass',
+        message: 'Has negative routing examples (what NOT to use this for)',
+        points: 2
+      });
+    } else {
+      findings.push({
+        type: 'fail',
+        message: 'No negative routing examples found',
+        points: 0
+      });
+    }
+
+    // Routing-quality description (1 point)
+    const hasUseWhen = content.includes('use when') || content.includes('use this when');
+    const hasToolNames = content.includes('curl') || content.includes('npm') || content.includes('pip') || content.includes('brew') || content.match(/`[a-z_-]+`/);
+    const hasIOSignals = content.includes('input') || content.includes('output') || content.includes('returns') || content.includes('produces');
+    if (hasUseWhen || (hasToolNames && hasIOSignals)) {
+      score += 1;
+      findings.push({
+        type: 'pass',
+        message: 'Description has concrete routing signals',
+        points: 1
+      });
+    } else {
+      findings.push({
+        type: 'fail',
+        message: 'Description lacks concrete routing signals',
+        points: 0
       });
     }
 
@@ -751,16 +835,16 @@ export class SkillScorer {
       });
     }
 
-    // Edge case documentation (3 points)
+    // Edge case documentation (2 points)
     const limitationKeywords = ['limitation', 'constraint', 'caveat', 'note', 'warning', 'caution'];
     const hasLimitations = limitationKeywords.some(keyword => content.includes(keyword));
     
     if (hasLimitations) {
-      score += 3;
+      score += 2;
       findings.push({
         type: 'pass',
         message: 'Limitations and caveats documented',
-        points: 3
+        points: 2
       });
     } else {
       findings.push({
@@ -770,21 +854,49 @@ export class SkillScorer {
       });
     }
 
-    // Troubleshooting (2 points)
+    // Troubleshooting (1 point)
     const troubleshootKeywords = ['troubleshoot', 'debug', 'faq', 'common issue', 'problem'];
     const hasTroubleshooting = troubleshootKeywords.some(keyword => content.includes(keyword));
     
     if (hasTroubleshooting) {
-      score += 2;
+      score += 1;
       findings.push({
         type: 'pass',
         message: 'Troubleshooting guidance provided',
-        points: 2
+        points: 1
       });
     } else {
       findings.push({
         type: 'info',
         message: 'No troubleshooting section found',
+        points: 0
+      });
+    }
+
+    // Embedded templates / worked examples (2 points)
+    const codeBlockCount = (skill.skillMdContent.match(/```/g) || []).length / 2;
+    const templateKeywords = ['template', 'format', 'example output', 'sample output', 'expected output'];
+    const hasTemplateKeywords = templateKeywords.some(k => content.includes(k));
+    const hasStructuredOutput = /```[\s\S]*?(json|yaml|xml|{[\s\S]*?}|\[[\s\S]*?\])[\s\S]*?```/.test(skill.skillMdContent);
+    
+    if (codeBlockCount >= 2 && (hasTemplateKeywords || hasStructuredOutput)) {
+      score += 2;
+      findings.push({
+        type: 'pass',
+        message: 'Has embedded templates or worked examples with expected output',
+        points: 2
+      });
+    } else if (codeBlockCount >= 1) {
+      score += 1;
+      findings.push({
+        type: 'warning',
+        message: 'Has code blocks but no clear template/output examples',
+        points: 1
+      });
+    } else {
+      findings.push({
+        type: 'fail',
+        message: 'No embedded templates or worked examples',
         points: 0
       });
     }

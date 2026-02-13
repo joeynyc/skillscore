@@ -91,8 +91,13 @@ export const STRUCTURE_CRITERIA: ScoringCriteria = {
   },
   fileOrganization: {
     description: 'Clean file organization',
-    points: 2,
+    points: 1,
     checks: ['Reasonable folder structure', 'No unnecessary files', 'Logical naming']
+  },
+  artifactOutputSpec: {
+    description: 'Defines where outputs/artifacts go',
+    points: 1,
+    checks: ['Output location defined', 'Artifact destinations specified']
   },
   followsConventions: {
     description: 'Follows OpenClaw skill conventions',
@@ -137,8 +142,13 @@ export const SAFETY_CRITERIA: ScoringCriteria = {
   },
   unboundedLoops: {
     description: 'No unbounded loops or infinite processes',
-    points: 2,
+    points: 1,
     checks: ['Loops have exit conditions', 'No infinite recursion', 'Bounded operations']
+  },
+  networkContainment: {
+    description: 'Network usage has containment measures',
+    points: 1,
+    checks: ['Network calls scoped to allowed domains', 'Response validation']
   },
   permissions: {
     description: 'Respects system and user permissions',
@@ -196,7 +206,7 @@ export const ERROR_HANDLING_CRITERIA: ScoringCriteria = {
 export const SCOPE_CRITERIA: ScoringCriteria = {
   singleResponsibility: {
     description: 'Follows single responsibility principle',
-    points: 3,
+    points: 2,
     checks: ['Does one thing well', 'No feature creep', 'Clear boundaries']
   },
   accurateDescription: {
@@ -206,8 +216,18 @@ export const SCOPE_CRITERIA: ScoringCriteria = {
   },
   specificTriggers: {
     description: 'Has specific, clear trigger conditions',
-    points: 3,
+    points: 2,
     checks: ['Clear activation conditions', 'Specific use cases', 'Unambiguous triggers']
+  },
+  negativeExamples: {
+    description: 'Includes negative routing examples (what NOT to use this for)',
+    points: 2,
+    checks: ['Negative examples defined', 'Clear routing boundaries']
+  },
+  routingQuality: {
+    description: 'Description has concrete routing signals',
+    points: 1,
+    checks: ['Tool names mentioned', 'Input/output specified', 'Use-when patterns']
   },
   noConflicts: {
     description: 'No conflicts with other skills or systems',
@@ -229,13 +249,18 @@ export const DOCUMENTATION_CRITERIA: ScoringCriteria = {
   },
   edgeCaseDocumentation: {
     description: 'Documents edge cases and limitations',
-    points: 3,
+    points: 2,
     checks: ['Known limitations', 'Edge case behavior', 'Boundary conditions']
   },
   troubleshooting: {
     description: 'Includes troubleshooting guidance',
-    points: 2,
+    points: 1,
     checks: ['Common issues', 'Debug steps', 'FAQ or troubleshooting section']
+  },
+  embeddedTemplates: {
+    description: 'Has embedded templates or worked examples with expected output',
+    points: 2,
+    checks: ['Code block templates', 'Expected output examples', 'Structured output formats']
   }
 };
 

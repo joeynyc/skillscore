@@ -198,27 +198,39 @@ SkillScore evaluates skills across **8 weighted categories**:
 
 | Category | Weight | Description |
 |----------|--------|-------------|
-| **Structure** | 15% | SKILL.md exists, clear name/description, follows conventions |
+| **Structure** | 15% | SKILL.md exists, clear name/description, file organization, artifact output spec |
 | **Clarity** | 20% | Specific actionable instructions, no ambiguity, logical order |
-| **Safety** | 20% | No destructive commands without confirmation, respects permissions |
+| **Safety** | 20% | No destructive commands, respects permissions, network containment |
 | **Dependencies** | 10% | Lists required tools/APIs, install instructions, env vars |
 | **Error Handling** | 10% | Failure instructions, fallbacks, no silent failures |
-| **Scope** | 10% | Single responsibility, accurate description, specific triggers |
-| **Documentation** | 10% | Usage examples, expected I/O, troubleshooting |
+| **Scope** | 10% | Single responsibility, routing quality, negative examples |
+| **Documentation** | 10% | Usage examples, embedded templates, expected I/O |
 | **Portability** | 5% | Cross-platform, no hardcoded paths, relative paths |
 
 ### Scoring Methodology
 
 Each category is scored from 0-10 points based on specific criteria:
 
-- **Structure**: Checks for SKILL.md existence, clear naming, proper organization
+- **Structure**: Checks for SKILL.md existence, clear naming, proper organization, and whether outputs/artifacts are defined
 - **Clarity**: Analyzes instruction specificity, ambiguity, logical flow
-- **Safety**: Scans for destructive commands, security risks, permission issues
+- **Safety**: Scans for destructive commands, security risks, permission issues, and network containment (does the skill scope network access when using HTTP/APIs?)
 - **Dependencies**: Validates tool listings, installation instructions, environment setup
 - **Error Handling**: Reviews error scenarios, fallback strategies, validation
-- **Scope**: Assesses single responsibility, trigger clarity, conflict potential
-- **Documentation**: Evaluates examples, I/O documentation, troubleshooting guides
+- **Scope**: Assesses single responsibility, trigger clarity, conflict potential, **negative routing examples** ("don't use when..."), and **routing quality** (concrete signals vs vague descriptions)
+- **Documentation**: Evaluates examples, I/O documentation, troubleshooting guides, and **embedded templates/worked examples** with expected output
 - **Portability**: Checks cross-platform compatibility, path handling, limitations
+
+### v1.1.0: Production-Validated Checks
+
+Five new sub-criteria added in v1.1.0, inspired by [OpenAI's Skills + Shell + Compaction blog](https://developers.openai.com/blog/skills-shell-tips) and production data from Glean:
+
+| Check | Category | Points | Why It Matters |
+|-------|----------|--------|----------------|
+| **Negative routing examples** | Scope | 2 | Skills that say when NOT to use them trigger ~20% more accurately (Glean data) |
+| **Routing quality** | Scope | 1 | Descriptions with concrete tool names, I/O, and "use when" patterns route better than marketing copy |
+| **Embedded templates** | Documentation | 2 | Real output templates inside the skill drove the biggest quality + latency gains in production |
+| **Network containment** | Safety | 1 | Skills combining tools + open network access are a data exfiltration risk without scoping |
+| **Artifact output spec** | Structure | 1 | Skills that define where outputs go create clean review boundaries |
 
 ### Grade Scale
 
@@ -261,6 +273,16 @@ my-skill/
 
 Brief description of what this skill does and when to use it.
 
+## When to Use
+
+Use this skill when you need to [specific task] with [specific tools/inputs].
+
+## When NOT to Use
+
+Don't use this skill when:
+- The task is [alternative scenario] — use [other skill] instead
+- You need [different capability]
+
 ## Dependencies
 
 - Tool 1: Installation instructions
@@ -273,6 +295,10 @@ Brief description of what this skill does and when to use it.
 2. Specific commands to run
 3. Expected outputs
 
+## Output
+
+Results are written to `./output/` as JSON files.
+
 ## Error Handling
 
 - Common issues and solutions
@@ -280,6 +306,15 @@ Brief description of what this skill does and when to use it.
 - Validation steps
 
 ## Examples
+
+### Example Output
+
+```json
+{
+  "status": "success",
+  "result": "Example of what the skill produces"
+}
+```
 
 ```bash
 # Working example
@@ -438,7 +473,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Inspired by the need for quality assessment in AI agent skills
 - Built for the OpenClaw and Claude Code communities
 - Thanks to all contributors and skill creators
-- Scoring methodology informed by software engineering best practices
+- Scoring methodology informed by software engineering best practices and [OpenAI's production skill patterns](https://developers.openai.com/blog/skills-shell-tips)
 
 ## 📊 Example Scores
 

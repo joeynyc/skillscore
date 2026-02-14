@@ -75,14 +75,14 @@ skillscore ./skills/my-skill/ --verbose
 ### GitHub Integration
 
 ```bash
-# Full GitHub URL
+# Full GitHub URL (always recognized)
 skillscore https://github.com/vercel-labs/skills/tree/main/skills/find-skills
 
-# GitHub shorthand
-skillscore vercel-labs/skills/find-skills
+# GitHub shorthand (requires -g/--github flag)
+skillscore -g vercel-labs/skills/find-skills
 
 # Anthropic skills
-skillscore anthropic/skills/skill-creator
+skillscore -g anthropic/skills/skill-creator
 ```
 
 ### Output Formats
@@ -102,11 +102,14 @@ skillscore ./skills/my-skill/ --json --output score.json
 ### Batch Mode
 
 ```bash
-# Compare multiple skills
-skillscore ./skill1 ./skill2 ./skill3 --batch
+# Compare multiple skills (auto-enters batch mode)
+skillscore ./skill1 ./skill2 ./skill3
+
+# Explicit batch mode flag
+skillscore ./skill1 ./skill2 --batch
 
 # Compare GitHub skills
-skillscore user/repo1/skill1 user/repo2/skill2 --batch --json
+skillscore -g user/repo1/skill1 user/repo2/skill2 --json
 ```
 
 ### Utility Commands
@@ -334,28 +337,31 @@ Use SkillScore programmatically in your Node.js projects:
 
 ```typescript
 import { SkillParser, SkillScorer, TerminalReporter } from 'skillscore';
+import type { Reporter, SkillScore } from 'skillscore';
 
 const parser = new SkillParser();
 const scorer = new SkillScorer();
-const reporter = new TerminalReporter();
+const reporter: Reporter = new TerminalReporter();
 
-async function evaluateSkill(skillPath: string) {
+async function evaluateSkill(skillPath: string): Promise<SkillScore> {
   const skill = await parser.parseSkill(skillPath);
   const score = await scorer.scoreSkill(skill);
   const report = reporter.generateReport(score);
-  
+
   console.log(report);
   return score;
 }
 ```
 
+All three reporters (`TerminalReporter`, `JsonReporter`, `MarkdownReporter`) implement the `Reporter` interface.
+
 ## 🛠️ CLI Options
 
 ```
-Usage: skillscore [options] <path>
+Usage: skillscore [options] <path...>
 
 Arguments:
-  path                   Path to skill directory, GitHub URL, or shorthand
+  path                   Path(s) to skill directory, GitHub URL, or shorthand
 
 Options:
   -V, --version         Output the version number
@@ -364,7 +370,7 @@ Options:
   -o, --output <file>   Write output to file
   -v, --verbose         Show ALL findings (not just truncated)
   -b, --batch           Batch mode for comparing multiple skills
-  --version             Display version number
+  -g, --github          Treat shorthand paths as GitHub repos (user/repo/path)
   -h, --help           Display help for command
 ```
 

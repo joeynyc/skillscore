@@ -73,6 +73,12 @@ export const SCORING_CATEGORIES: ScoringCategory[] = [
   }
 ];
 
+// Validate weights sum to 1.0 at module load to catch drift when adding/changing categories
+const totalWeight = SCORING_CATEGORIES.reduce((sum, cat) => sum + cat.weight, 0);
+if (Math.abs(totalWeight - 1.0) > 0.001) {
+  throw new Error(`SCORING_CATEGORIES weights must sum to 1.0, got ${totalWeight}`);
+}
+
 export const STRUCTURE_CRITERIA: ScoringCriteria = {
   skillMdExists: {
     description: 'SKILL.md file exists',

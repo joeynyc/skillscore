@@ -1,6 +1,6 @@
 {
   "name": "skillscore",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A CLI tool that evaluates AI agent skills and produces quality scores",
   "main": "dist/index.js",
   "bin": {

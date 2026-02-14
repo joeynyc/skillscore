@@ -1,24 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SkillScoreCli } from '../../src/cli';
-
-// Mock external dependencies
-vi.mock('child_process', () => ({
-  execSync: vi.fn()
-}));
-
-vi.mock('fs-extra', async () => {
-  const actual = await vi.importActual('fs-extra');
-  return {
-    ...actual,
-    remove: vi.fn(),
-    ensureDir: vi.fn(),
-    pathExists: vi.fn()
-  };
-});
+import { SkillScoreCli, CliError } from '../../src/cli';
+import path from 'path';
 
 describe('SkillScoreCli', () => {
   beforeEach(() => {
-    // Initialize test environment
+    vi.restoreAllMocks();
   });
 
   describe('GitHub URL Detection', () => {
@@ -107,18 +93,50 @@ describe('SkillScoreCli', () => {
     });
   });
 
-  describe('Command Line Arguments', () => {
-    it('should accept verbose flag', () => {
-      // Test that the CLI is configured to accept verbose flag
-      // We test the configuration, not the actual execution
-      expect(SkillScoreCli).toBeDefined();
-      // Note: We avoid actually running CLI commands that call process.exit()
+  describe('CLI Error Handling', () => {
+    const fixturesPath = path.join(__dirname, '..', 'fixtures');
+
+    it('should throw CliError for non-existent path', async () => {
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', './does-not-exist'])
+      ).rejects.toThrow(CliError);
     });
 
-    it('should accept output format flags', () => {
-      // Test that the CLI is configured to accept output format flags
-      expect(SkillScoreCli).toBeDefined();
-      // Note: We avoid actually running CLI commands that call process.exit()
+    it('should throw CliError when path is a file, not a directory', async () => {
+      const filePath = path.join(fixturesPath, 'perfect-skill', 'SKILL.md');
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', filePath])
+      ).rejects.toThrow(CliError);
+    });
+
+    it('should succeed for a valid skill directory', async () => {
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', path.join(fixturesPath, 'perfect-skill')])
+      ).resolves.toBeUndefined();
+    });
+
+    it('should succeed with --json flag', async () => {
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', '--json', path.join(fixturesPath, 'perfect-skill')])
+      ).resolves.toBeUndefined();
+    });
+
+    it('should succeed with --verbose flag', async () => {
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', '--verbose', path.join(fixturesPath, 'perfect-skill')])
+      ).resolves.toBeUndefined();
+    });
+
+    it('should succeed in batch mode with multiple paths', async () => {
+      const cli = new SkillScoreCli();
+      await expect(
+        cli.runParsed(['node', 'skillscore', path.join(fixturesPath, 'perfect-skill'), path.join(fixturesPath, 'mediocre-skill')])
+      ).resolves.toBeUndefined();
     });
   });
 });

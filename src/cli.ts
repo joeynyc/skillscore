@@ -12,6 +12,13 @@ import { TerminalReporter } from './reporters/terminalReporter';
 import { JsonReporter } from './reporters/jsonReporter';
 import { MarkdownReporter } from './reporters/markdownReporter';
 
+export class CliError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CliError';
+  }
+}
+
 interface CliOptions {
   json?: boolean;
   markdown?: boolean;
@@ -110,6 +117,18 @@ Grade Scale:
   }
 
   async run(args?: string[]): Promise<void> {
+    try {
+      await this.program.parseAsync(args);
+    } catch (error) {
+      if (error instanceof CliError) {
+        process.exit(1);
+      }
+      throw error;
+    }
+  }
+
+  /** Run without process.exit — throws CliError on failure. Useful for testing. */
+  async runParsed(args: string[]): Promise<void> {
     await this.program.parseAsync(args);
   }
 
@@ -509,15 +528,15 @@ Grade Scale:
     }
   }
 
-  private handleError(error: unknown): void {
+  private handleError(error: unknown): never {
     const message = error instanceof Error ? error.message : String(error);
-    
+
     // Clear any progress indicators
     process.stdout.write('\r' + ' '.repeat(50) + '\r');
-    
+
     console.error('');
     console.error(chalk.red('❌ Error:'), message.split('\n')[0]);
-    
+
     // Show additional error context if available
     const lines = message.split('\n');
     if (lines.length > 1) {
@@ -526,9 +545,9 @@ Grade Scale:
         console.error(chalk.gray('   ' + lines[i]));
       }
     }
-    
+
     console.error('');
-    
+
     // Provide context-specific tips
     if (message.includes('does not exist')) {
       console.error(chalk.yellow('💡 Tip:'), 'Verify the path is correct and accessible');
@@ -545,16 +564,13 @@ Grade Scale:
       console.error(chalk.yellow('💡 Tip:'), 'Install Git to clone GitHub repositories');
       console.error(chalk.gray('   • macOS: xcode-select --install'));
       console.error(chalk.gray('   • Ubuntu: sudo apt-get install git'));
-    } else if (message.includes('process.exit unexpectedly')) {
-      // Don't show this internal testing error to users
-      return;
     }
-    
+
     console.error('');
     console.error(chalk.gray('Run'), chalk.cyan('skillscore --help'), chalk.gray('for usage information'));
     console.error('');
-    
-    process.exit(1);
+
+    throw new CliError(message);
   }
 }
 

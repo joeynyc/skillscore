@@ -5,6 +5,7 @@ import { SkillScoreCli } from './cli';
 // Export main classes for programmatic use
 export { SkillParser } from './parsers/skillParser';
 export { SkillScorer } from './scorer';
+export { SkillScoreCli, CliError } from './cli';
 export { TerminalReporter } from './reporters/terminalReporter';
 export { JsonReporter } from './reporters/jsonReporter';
 export { MarkdownReporter } from './reporters/markdownReporter';

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { SkillScore, CategoryScore, Finding } from '../scorer';
+import { SkillScore, CategoryScore, Finding, Reporter } from '../scorer';
 
-export class TerminalReporter {
+export class TerminalReporter implements Reporter {
   generateReport(score: SkillScore, verbose: boolean = false): string {
     const lines: string[] = [];
     

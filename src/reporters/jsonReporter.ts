@@ -1,4 +1,4 @@
-import { SkillScore } from '../scorer';
+import { SkillScore, Reporter } from '../scorer';
 
 export interface JsonReport {
   skillName: string;
@@ -33,7 +33,7 @@ export interface JsonReport {
   };
 }
 
-export class JsonReporter {
+export class JsonReporter implements Reporter {
   generateReport(score: SkillScore): string {
     const report: JsonReport = {
       skillName: score.skill.name,

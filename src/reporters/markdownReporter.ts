@@ -1,6 +1,6 @@
-import { SkillScore, CategoryScore } from '../scorer';
+import { SkillScore, CategoryScore, Reporter } from '../scorer';
 
-export class MarkdownReporter {
+export class MarkdownReporter implements Reporter {
   generateReport(score: SkillScore): string {
     const lines: string[] = [];
     

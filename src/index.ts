@@ -15,6 +15,7 @@ export {
   type ScoringCriteria
 } from './rubric';
 export {
+  type Reporter,
   type SkillScore,
   type CategoryScore,
   type Finding

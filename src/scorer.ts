@@ -28,6 +28,10 @@ export interface Finding {
   points: number;
 }
 
+export interface Reporter {
+  generateReport(score: SkillScore): string;
+}
+
 export interface SkillScore {
   skill: ParsedSkill;
   categoryScores: CategoryScore[];

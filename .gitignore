@@ -73,6 +73,9 @@ temp/
 logs
 *.log
 
+# Claude Code
+CLAUDE.md
+
 # IDE
 .vscode/
 .idea/

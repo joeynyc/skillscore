@@ -18,6 +18,7 @@ interface CliOptions {
   output?: string;
   verbose?: boolean;
   batch?: boolean;
+  github?: boolean;
   version?: boolean;
 }
 
@@ -57,13 +58,14 @@ export class SkillScoreCli {
       .option('-o, --output <file>', 'Write output to file')
       .option('-v, --verbose', 'Verbose output with detailed findings (shows all findings, not just truncated)')
       .option('-b, --batch', 'Batch mode - accepts multiple paths/URLs for comparison')
+      .option('-g, --github', 'Treat shorthand paths as GitHub repos (user/repo/path)')
       .option('--version', 'Display version number')
       .helpOption('-h, --help', 'Display help for command')
       .addHelpText('after', `
 Examples:
   $ skillscore ./my-skill                    # Evaluate local skill
   $ skillscore ./skills/weather-skill        # Evaluate specific skill
-  $ skillscore vercel-labs/skills/find-skills          # GitHub shorthand
+  $ skillscore -g vercel-labs/skills/find-skills        # GitHub shorthand (requires -g)
   $ skillscore https://github.com/user/repo/tree/main/skills/my-skill  # Full GitHub URL
   $ skillscore ./my-skill --json             # JSON output
   $ skillscore ./my-skill --markdown         # Markdown output
@@ -138,13 +140,13 @@ Grade Scale:
     let gitHubInfo: GitHubUrlInfo | null = null;
 
     // Check if this is a GitHub URL
-    if (this.isGitHubUrl(skillPath)) {
+    if (this.isGitHubUrl(skillPath, options.github)) {
       if (options.verbose) {
         console.log(chalk.gray(`🐙 Detected GitHub URL, cloning...`));
       } else if (!options.json && !options.markdown && !options.output) {
         process.stdout.write(chalk.gray('\r🐙 Cloning...    '));
       }
-      
+
       gitHubInfo = await this.cloneGitHubUrl(skillPath);
       if (gitHubInfo.subPath) {
         resolvedPath = path.join(gitHubInfo.tempDir, gitHubInfo.subPath);
@@ -154,12 +156,12 @@ Grade Scale:
     } else {
       // Resolve local path
       resolvedPath = path.resolve(skillPath);
-      
+
       // Better error handling for missing paths
       if (!await fs.pathExists(resolvedPath)) {
         throw new Error(`Path does not exist: ${skillPath}\nPlease verify the path is correct and accessible.`);
       }
-      
+
       // Check if it's a file instead of directory
       const stat = await fs.stat(resolvedPath);
       if (!stat.isDirectory()) {
@@ -274,7 +276,7 @@ Grade Scale:
         let resolvedPath: string;
         let gitHubInfo: GitHubUrlInfo | null = null;
 
-        if (this.isGitHubUrl(skillPath)) {
+        if (this.isGitHubUrl(skillPath, options.github)) {
           gitHubInfo = await this.cloneGitHubUrl(skillPath);
           if (gitHubInfo.subPath) {
             resolvedPath = path.join(gitHubInfo.tempDir, gitHubInfo.subPath);
@@ -408,36 +410,25 @@ Grade Scale:
     }
   }
 
-  private isGitHubUrl(input: string): boolean {
-    // Full GitHub URLs
+  private isGitHubUrl(input: string, githubFlag: boolean = false): boolean {
+    // Full GitHub URLs — always recognized
     if (input.startsWith('https://github.com/') || input.startsWith('http://github.com/')) {
       return true;
     }
-    
-    // Don't treat local/relative paths as GitHub URLs
+
+    // Shorthand format (user/repo/path) only when --github flag is set
+    if (!githubFlag) {
+      return false;
+    }
+
+    // Don't treat local/relative paths as GitHub URLs even with --github
     if (input.startsWith('./') || input.startsWith('../') || input.startsWith('/') || input.includes('\\')) {
       return false;
     }
-    
-    // Shorthand format: user/repo or user/repo/path (but not local paths like tests/fixtures)
+
+    // Shorthand format: user/repo or user/repo/path
     const shorthandPattern = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/;
-    if (shorthandPattern.test(input)) {
-      // Additional validation: typical GitHub usernames don't contain common local path prefixes
-      const parts = input.split('/');
-      const possibleUsername = parts[0];
-      
-      if (possibleUsername) {
-        // Common local path prefixes that shouldn't be GitHub usernames
-        const localPrefixes = ['tests', 'test', 'spec', 'src', 'lib', 'dist', 'build', 'node_modules'];
-        if (localPrefixes.includes(possibleUsername.toLowerCase())) {
-          return false;
-        }
-      }
-      
-      return true;
-    }
-    
-    return false;
+    return shorthandPattern.test(input);
   }
 
   private parseGitHubUrl(input: string): { repoUrl: string; subPath: string | undefined } {

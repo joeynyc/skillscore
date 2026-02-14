@@ -31,23 +31,33 @@ describe('SkillScoreCli', () => {
       expect(isGitHubUrl('http://github.com/user/repo')).toBeTruthy();
     });
 
-    it('should detect shorthand GitHub URLs', () => {
+    it('should detect shorthand GitHub URLs only with --github flag', () => {
       const cli = new SkillScoreCli();
       const isGitHubUrl = (cli as any).isGitHubUrl;
-      
-      expect(isGitHubUrl('user/repo')).toBeTruthy();
-      expect(isGitHubUrl('user/repo/path/to/skill')).toBeTruthy();
-      expect(isGitHubUrl('vercel-labs/skills')).toBeTruthy();
+
+      // Without flag, shorthands are NOT treated as GitHub URLs
+      expect(isGitHubUrl('user/repo')).toBeFalsy();
+      expect(isGitHubUrl('user/repo/path/to/skill')).toBeFalsy();
+      expect(isGitHubUrl('vercel-labs/skills')).toBeFalsy();
+
+      // With flag, shorthands are treated as GitHub URLs
+      expect(isGitHubUrl('user/repo', true)).toBeTruthy();
+      expect(isGitHubUrl('user/repo/path/to/skill', true)).toBeTruthy();
+      expect(isGitHubUrl('vercel-labs/skills', true)).toBeTruthy();
     });
 
     it('should not detect non-GitHub URLs', () => {
       const cli = new SkillScoreCli();
       const isGitHubUrl = (cli as any).isGitHubUrl;
-      
+
       expect(isGitHubUrl('./local/path')).toBeFalsy();
       expect(isGitHubUrl('/absolute/path')).toBeFalsy();
       expect(isGitHubUrl('https://example.com/repo')).toBeFalsy();
       expect(isGitHubUrl('single-word')).toBeFalsy();
+
+      // Local-looking paths should not match even with --github flag
+      expect(isGitHubUrl('./local/path', true)).toBeFalsy();
+      expect(isGitHubUrl('/absolute/path', true)).toBeFalsy();
     });
   });
 

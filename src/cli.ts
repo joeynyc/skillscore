@@ -51,7 +51,7 @@ export class SkillScoreCli {
       .name('skillscore')
       .description('Evaluate AI agent skills and produce quality scores')
       .version(this.packageInfo.version)
-      .argument('<path>', 'Path to skill directory, GitHub URL, or shorthand (user/repo/path)')
+      .argument('<path...>', 'Path(s) to skill directory, GitHub URL, or shorthand (user/repo/path)')
       .option('-j, --json', 'Output in JSON format')
       .option('-m, --markdown', 'Output in Markdown format')
       .option('-o, --output <file>', 'Write output to file')
@@ -70,7 +70,8 @@ Examples:
   $ skillscore ./my-skill -o report.md       # Save to file
   $ skillscore ./my-skill --json -o score.json  # JSON to file
   $ skillscore ./my-skill --verbose          # Show all findings (not truncated)
-  $ skillscore ./my-skill --batch            # Batch mode for comparing multiple skills
+  $ skillscore ./skill1 ./skill2 ./skill3    # Compare multiple skills (auto batch)
+  $ skillscore ./skill1 ./skill2 --batch     # Explicit batch mode
   $ skillscore --version                     # Show version number
 
 Scoring Categories:
@@ -91,15 +92,15 @@ Grade Scale:
   F  (0-59%)
 `);
 
-    this.program.action(async (skillPath: string, options: CliOptions) => {
+    this.program.action(async (paths: string[], options: CliOptions) => {
       try {
         // Handle version flag
         if (options.version) {
           console.log(this.packageInfo.version);
           return;
         }
-        
-        await this.executeScore(skillPath, options);
+
+        await this.executeScore(paths, options);
       } catch (error) {
         this.handleError(error);
       }
@@ -110,15 +111,15 @@ Grade Scale:
     await this.program.parseAsync(args);
   }
 
-  private async executeScore(skillPath: string, options: CliOptions): Promise<void> {
-    // Handle batch mode
-    if (options.batch) {
-      await this.executeBatchScore([skillPath], options);
+  private async executeScore(paths: string[], options: CliOptions): Promise<void> {
+    // Handle batch mode (explicit flag or multiple paths)
+    if (options.batch || paths.length > 1) {
+      await this.executeBatchScore(paths, options);
       return;
     }
 
     // Handle single skill scoring
-    await this.executeSingleScore(skillPath, options);
+    await this.executeSingleScore(paths[0]!, options);
   }
 
   private async executeSingleScore(skillPath: string, options: CliOptions): Promise<void> {

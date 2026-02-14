@@ -1,0 +1,15 @@
+# Source
+src/
+tests/
+test-skill/
+
+# Assets
+assets/
+
+# Config
+tsconfig.json
+vitest.config.ts
+eslint.config.mjs
+.github/
+CONTRIBUTING.md
+CLAUDE.md

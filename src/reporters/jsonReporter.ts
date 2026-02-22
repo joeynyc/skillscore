@@ -1,4 +1,16 @@
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import { SkillScore, Reporter } from '../scorer';
+
+function readVersion(): string {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf-8')).version;
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const VERSION = readVersion();
 
 export interface JsonReport {
   skillName: string;
@@ -62,7 +74,7 @@ export class JsonReporter implements Reporter {
       })),
       metadata: {
         timestamp: score.timestamp.toISOString(),
-        version: '1.0.0',
+        version: VERSION,
         fileCount: score.skill.structure.totalFiles,
         hasSkillMd: score.skill.structure.hasSkillMd
       }

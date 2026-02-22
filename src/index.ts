@@ -9,11 +9,10 @@ export { SkillScoreCli, CliError } from './cli';
 export { TerminalReporter } from './reporters/terminalReporter';
 export { JsonReporter } from './reporters/jsonReporter';
 export { MarkdownReporter } from './reporters/markdownReporter';
-export { 
+export {
   SCORING_CATEGORIES,
   getLetterGrade,
-  type ScoringCategory,
-  type ScoringCriteria
+  type ScoringCategory
 } from './rubric';
 export {
   type Reporter,

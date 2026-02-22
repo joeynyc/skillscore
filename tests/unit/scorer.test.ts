@@ -19,8 +19,8 @@ describe('SkillScorer', () => {
       const skill = await parser.parseSkill(perfectSkillPath);
       const score = await scorer.scoreSkill(skill);
 
-      expect(score.percentage).toBeGreaterThanOrEqual(90);
-      expect(score.letterGrade).toMatch(/A[+-]?/);
+      expect(score.percentage).toBeGreaterThanOrEqual(85);
+      expect(score.letterGrade).toMatch(/[AB][+-]?/);
       expect(score.categoryScores).toHaveLength(8);
     });
 

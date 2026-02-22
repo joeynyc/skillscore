@@ -26,7 +26,6 @@ interface CliOptions {
   verbose?: boolean;
   batch?: boolean;
   github?: boolean;
-  version?: boolean;
 }
 
 interface GitHubUrlInfo {
@@ -103,12 +102,6 @@ Grade Scale:
 
     this.program.action(async (paths: string[], options: CliOptions) => {
       try {
-        // Handle version flag
-        if (options.version) {
-          console.log(this.packageInfo.version);
-          return;
-        }
-
         await this.executeScore(paths, options);
       } catch (error) {
         this.handleError(error);
@@ -155,33 +148,19 @@ Grade Scale:
       console.log(chalk.gray(`\n🔍 Analyzing skill at: ${skillPath}`));
     }
 
-    let resolvedPath: string;
-    let gitHubInfo: GitHubUrlInfo | null = null;
-
-    // Check if this is a GitHub URL
+    // Show progress before potential GitHub clone
     if (this.isGitHubUrl(skillPath, options.github)) {
       if (options.verbose) {
         console.log(chalk.gray(`🐙 Detected GitHub URL, cloning...`));
       } else if (!options.json && !options.markdown && !options.output) {
         process.stdout.write(chalk.gray('\r🐙 Cloning...    '));
       }
+    }
 
-      gitHubInfo = await this.cloneGitHubUrl(skillPath);
-      if (gitHubInfo.subPath) {
-        resolvedPath = path.join(gitHubInfo.tempDir, gitHubInfo.subPath);
-      } else {
-        resolvedPath = gitHubInfo.tempDir;
-      }
-    } else {
-      // Resolve local path
-      resolvedPath = path.resolve(skillPath);
+    const { resolvedPath, gitHubInfo } = await this.resolveSkillPath(skillPath, options.github);
 
-      // Better error handling for missing paths
-      if (!await fs.pathExists(resolvedPath)) {
-        throw new Error(`Path does not exist: ${skillPath}\nPlease verify the path is correct and accessible.`);
-      }
-
-      // Check if it's a file instead of directory
+    // Check if it's a file instead of directory (local paths only)
+    if (!gitHubInfo) {
       const stat = await fs.stat(resolvedPath);
       if (!stat.isDirectory()) {
         throw new Error(`Path must be a directory containing a skill, not a file: ${skillPath}\nTip: Point to the directory containing SKILL.md`);
@@ -226,20 +205,13 @@ Grade Scale:
 
       // Generate report
       let output: string;
-      let extension = 'txt';
 
       if (options.json) {
-        const reporter = new JsonReporter();
-        output = reporter.generateReport(score);
-        extension = 'json';
+        output = new JsonReporter().generateReport(score);
       } else if (options.markdown) {
-        const reporter = new MarkdownReporter();
-        output = reporter.generateReport(score);
-        extension = 'md';
+        output = new MarkdownReporter().generateReport(score);
       } else {
-        const reporter = new TerminalReporter();
-        output = reporter.generateReport(score, options.verbose);
-        extension = 'txt';
+        output = new TerminalReporter().generateReport(score, options.verbose);
       }
 
       // Output handling
@@ -291,35 +263,18 @@ Grade Scale:
       console.log(chalk.gray(`[${i + 1}/${skillPaths.length}] Processing: ${skillPath}`));
 
       try {
-        // For batch mode, we'll directly score without displaying individual results
-        let resolvedPath: string;
-        let gitHubInfo: GitHubUrlInfo | null = null;
-
-        if (this.isGitHubUrl(skillPath, options.github)) {
-          gitHubInfo = await this.cloneGitHubUrl(skillPath);
-          if (gitHubInfo.subPath) {
-            resolvedPath = path.join(gitHubInfo.tempDir, gitHubInfo.subPath);
-          } else {
-            resolvedPath = gitHubInfo.tempDir;
-          }
-        } else {
-          resolvedPath = path.resolve(skillPath);
-          if (!await fs.pathExists(resolvedPath)) {
-            throw new Error(`Path does not exist: ${skillPath}`);
-          }
-        }
+        const { resolvedPath, gitHubInfo } = await this.resolveSkillPath(skillPath, options.github);
 
         try {
           const parser = new SkillParser();
           const scorer = new SkillScorer();
           const skill = await parser.parseSkill(resolvedPath);
           const score = await scorer.scoreSkill(skill);
-          
+
           results.push({ path: skillPath, score });
           console.log(chalk.green(`✅ Completed`));
-          
+
         } finally {
-          // Clean up GitHub temp dir
           if (gitHubInfo) {
             try {
               await fs.remove(gitHubInfo.tempDir);
@@ -350,11 +305,11 @@ Grade Scale:
 
     // Table header
     const headers = ['Skill', 'Grade', 'Score', 'Structure', 'Clarity', 'Safety', 'Status'];
-    const colWidths = [30, 6, 8, 9, 7, 6, 10];
-    
+    const colWidths: [number, number, number, number, number, number, number] = [30, 6, 8, 9, 7, 6, 10];
+    const pad = (s: string, i: number) => s.padEnd(colWidths[i]!);
+
     // Print header
-    const headerCells = headers.map((header, i) => header.padEnd(colWidths[i] || 0));
-    const headerRow = headerCells.join('');
+    const headerRow = headers.map((header, i) => pad(header, i)).join('');
     console.log(chalk.bold(headerRow));
     console.log('-'.repeat(headerRow.length));
 
@@ -362,13 +317,13 @@ Grade Scale:
     results.forEach(result => {
       if (result.error) {
         const cells = [
-          (path.basename(result.path) || 'Unknown').padEnd(colWidths[0] || 0),
-          '-'.padEnd(colWidths[1] || 0),
-          '-'.padEnd(colWidths[2] || 0),
-          '-'.padEnd(colWidths[3] || 0),
-          '-'.padEnd(colWidths[4] || 0),
-          '-'.padEnd(colWidths[5] || 0),
-          'ERROR'.padEnd(colWidths[6] || 0)
+          pad(path.basename(result.path) || 'Unknown', 0),
+          pad('-', 1),
+          pad('-', 2),
+          pad('-', 3),
+          pad('-', 4),
+          pad('-', 5),
+          pad('ERROR', 6)
         ];
         console.log(chalk.red(cells.join('')));
       } else if (result.score) {
@@ -381,18 +336,18 @@ Grade Scale:
         const clarity = clarityCat?.percentage !== undefined ? clarityCat.percentage.toFixed(0) : '-';
         const safety = safetyCat?.percentage !== undefined ? safetyCat.percentage.toFixed(0) : '-';
         
-        const skillName = (score.skill?.name || path.basename(result.path) || 'Unknown').substring(0, Math.max(0, (colWidths[0] || 30) - 1));
+        const skillName = (score.skill?.name || path.basename(result.path) || 'Unknown').substring(0, colWidths[0] - 1);
         const percentage = score.percentage !== undefined ? score.percentage.toFixed(1) : '0.0';
         const letterGrade = score.letterGrade || 'F';
-        
+
         const cells = [
-          skillName.padEnd(colWidths[0] || 0),
-          letterGrade.padEnd(colWidths[1] || 0),
-          (percentage + '%').padEnd(colWidths[2] || 0),
-          (structure + '%').padEnd(colWidths[3] || 0),
-          (clarity + '%').padEnd(colWidths[4] || 0),
-          (safety + '%').padEnd(colWidths[5] || 0),
-          'OK'.padEnd(colWidths[6] || 0)
+          pad(skillName, 0),
+          pad(letterGrade, 1),
+          pad(percentage + '%', 2),
+          pad(structure + '%', 3),
+          pad(clarity + '%', 4),
+          pad(safety + '%', 5),
+          pad('OK', 6)
         ];
         const row = cells.join('');
         
@@ -528,6 +483,22 @@ Grade Scale:
     }
   }
 
+  private async resolveSkillPath(skillPath: string, githubFlag: boolean = false): Promise<{ resolvedPath: string; gitHubInfo: GitHubUrlInfo | null }> {
+    if (this.isGitHubUrl(skillPath, githubFlag)) {
+      const gitHubInfo = await this.cloneGitHubUrl(skillPath);
+      const resolvedPath = gitHubInfo.subPath
+        ? path.join(gitHubInfo.tempDir, gitHubInfo.subPath)
+        : gitHubInfo.tempDir;
+      return { resolvedPath, gitHubInfo };
+    }
+
+    const resolvedPath = path.resolve(skillPath);
+    if (!await fs.pathExists(resolvedPath)) {
+      throw new Error(`Path does not exist: ${skillPath}\nPlease verify the path is correct and accessible.`);
+    }
+    return { resolvedPath, gitHubInfo: null };
+  }
+
   private handleError(error: unknown): never {
     const message = error instanceof Error ? error.message : String(error);
 
@@ -572,10 +543,4 @@ Grade Scale:
 
     throw new CliError(message);
   }
-}
-
-// For direct execution
-if (require.main === module) {
-  const cli = new SkillScoreCli();
-  cli.run();
 }

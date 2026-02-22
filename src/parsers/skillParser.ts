@@ -46,20 +46,19 @@ export class SkillParser {
     }
 
     const files = await this.getAllFiles(absolutePath);
-    const structure = await this.analyzeStructure(absolutePath, files);
-    
-    const parsed: ParsedSkill = {
+    const structure = this.analyzeStructure(files);
+    const frontmatter = this.parseFrontmatter(skillMdContent);
+
+    return {
       skillPath: absolutePath,
       skillMdExists,
       skillMdContent,
-      name: await this.extractName(skillMdContent, absolutePath),
-      description: await this.extractDescription(skillMdContent),
+      name: this.extractName(skillMdContent, absolutePath, frontmatter),
+      description: this.extractDescription(skillMdContent, frontmatter),
       files,
-      metadata: await this.extractMetadata(skillMdContent),
+      metadata: frontmatter,
       structure
     };
-
-    return parsed;
   }
 
   private async getAllFiles(dir: string): Promise<string[]> {
@@ -76,7 +75,7 @@ export class SkillParser {
     }
   }
 
-  private async analyzeStructure(skillPath: string, files: string[]): Promise<FileStructure> {
+  private analyzeStructure(files: string[]): FileStructure {
     const fileTypes: { [ext: string]: number } = {};
     const directories = new Set<string>();
 
@@ -104,65 +103,41 @@ export class SkillParser {
     };
   }
 
-  private async extractName(content: string, skillPath: string): Promise<string> {
-    if (!content) {
-      return path.basename(skillPath);
-    }
-
-    // Look for markdown heading
-    const headingMatch = content.match(/^# (.+)$/m);
-    if (headingMatch && headingMatch[1]) {
-      return headingMatch[1].trim();
-    }
-
-    // Look for YAML frontmatter name
-    const frontmatterMatch = content.match(/^---\n(.*?)\n---/s);
-    if (frontmatterMatch && frontmatterMatch[1]) {
+  private parseFrontmatter(content: string): any {
+    if (!content) return {};
+    const match = content.match(/^---\n(.*?)\n---/s);
+    if (match && match[1]) {
       try {
-        const metadata = yaml.parse(frontmatterMatch[1]);
-        if (metadata && metadata.name) {
-          return metadata.name;
-        }
+        return yaml.parse(match[1]) || {};
       } catch {
-        // Ignore YAML parsing errors
+        return {};
       }
     }
+    return {};
+  }
 
-    // Look for name: field
+  private extractName(content: string, skillPath: string, frontmatter: any): string {
+    if (!content) return path.basename(skillPath);
+
+    const headingMatch = content.match(/^# (.+)$/m);
+    if (headingMatch && headingMatch[1]) return headingMatch[1].trim();
+
+    if (frontmatter.name) return frontmatter.name;
+
     const nameMatch = content.match(/^name:\s*(.+)$/m);
-    if (nameMatch && nameMatch[1]) {
-      return nameMatch[1].trim();
-    }
+    if (nameMatch && nameMatch[1]) return nameMatch[1].trim();
 
-    // Fall back to directory name
     return path.basename(skillPath);
   }
 
-  private async extractDescription(content: string): Promise<string> {
-    if (!content) {
-      return '';
-    }
+  private extractDescription(content: string, frontmatter: any): string {
+    if (!content) return '';
 
-    // Look for YAML frontmatter description
-    const frontmatterMatch = content.match(/^---\n(.*?)\n---/s);
-    if (frontmatterMatch && frontmatterMatch[1]) {
-      try {
-        const metadata = yaml.parse(frontmatterMatch[1]);
-        if (metadata && metadata.description) {
-          return metadata.description;
-        }
-      } catch {
-        // Ignore YAML parsing errors
-      }
-    }
+    if (frontmatter.description) return frontmatter.description;
 
-    // Look for description: field
     const descMatch = content.match(/^description:\s*(.+)$/m);
-    if (descMatch && descMatch[1]) {
-      return descMatch[1].trim();
-    }
+    if (descMatch && descMatch[1]) return descMatch[1].trim();
 
-    // Look for first paragraph after heading
     const afterHeading = content.replace(/^#[^\n]*\n\s*\n/, '');
     const paragraphMatch = afterHeading.match(/^(.+?)(?:\n\s*\n|\n#|$)/s);
     if (paragraphMatch && paragraphMatch[1]) {
@@ -170,22 +145,5 @@ export class SkillParser {
     }
 
     return '';
-  }
-
-  private async extractMetadata(content: string): Promise<any> {
-    if (!content) {
-      return {};
-    }
-
-    const frontmatterMatch = content.match(/^---\n(.*?)\n---/s);
-    if (frontmatterMatch && frontmatterMatch[1]) {
-      try {
-        return yaml.parse(frontmatterMatch[1]) || {};
-      } catch {
-        return {};
-      }
-    }
-
-    return {};
   }
 }

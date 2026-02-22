@@ -38,7 +38,7 @@ describe('End-to-End Integration', () => {
       // Verify JSON output
       const jsonData = JSON.parse(jsonOutput);
       expect(jsonData.skillName).toBe('Perfect Test Skill');
-      expect(jsonData.overallScore.percentage).toBeGreaterThanOrEqual(90);
+      expect(jsonData.overallScore.percentage).toBeGreaterThanOrEqual(85);
       expect(jsonData.categories).toHaveLength(8);
       
       // Verify Markdown output

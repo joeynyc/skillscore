@@ -2,14 +2,6 @@ import { ParsedSkill } from './parsers/skillParser';
 import {
   SCORING_CATEGORIES,
   ScoringCategory,
-  STRUCTURE_CRITERIA,
-  CLARITY_CRITERIA,
-  SAFETY_CRITERIA,
-  DEPENDENCIES_CRITERIA,
-  ERROR_HANDLING_CRITERIA,
-  SCOPE_CRITERIA,
-  DOCUMENTATION_CRITERIA,
-  PORTABILITY_CRITERIA,
   getLetterGrade
 } from './rubric';
 
@@ -44,68 +36,55 @@ export interface SkillScore {
 
 export class SkillScorer {
   async scoreSkill(skill: ParsedSkill): Promise<SkillScore> {
-    const categoryScores: CategoryScore[] = [];
-
-    for (const category of SCORING_CATEGORIES) {
-      const score = await this.scoreCategory(skill, category);
-      categoryScores.push(score);
-    }
+    const categoryScores = SCORING_CATEGORIES.map(
+      category => this.scoreCategory(skill, category)
+    );
 
     const totalWeightedScore = categoryScores.reduce(
       (sum, cat) => sum + cat.weightedScore, 0
     );
-    const maxWeightedScore = categoryScores.reduce(
-      (sum, cat) => sum + (cat.maxScore * cat.category.weight), 0
-    );
-    
-    const percentage = (totalWeightedScore / maxWeightedScore) * 100;
+    const percentage = (totalWeightedScore / 10) * 100;
     
     return {
       skill,
       categoryScores,
       totalScore: totalWeightedScore,
-      maxTotalScore: maxWeightedScore,
+      maxTotalScore: 10,
       percentage,
       letterGrade: getLetterGrade(percentage),
       timestamp: new Date()
     };
   }
 
-  private async scoreCategory(skill: ParsedSkill, category: ScoringCategory): Promise<CategoryScore> {
+  private scoreCategory(skill: ParsedSkill, category: ScoringCategory): CategoryScore {
     let score = 0;
     let findings: Finding[] = [];
 
     switch (category.id) {
       case 'structure':
-        ({ score, findings } = await this.scoreStructure(skill));
+        ({ score, findings } = this.scoreStructure(skill));
         break;
       case 'clarity':
-        ({ score, findings } = await this.scoreClarity(skill));
+        ({ score, findings } = this.scoreClarity(skill));
         break;
       case 'safety':
-        ({ score, findings } = await this.scoreSafety(skill));
+        ({ score, findings } = this.scoreSafety(skill));
         break;
       case 'dependencies':
-        ({ score, findings } = await this.scoreDependencies(skill));
+        ({ score, findings } = this.scoreDependencies(skill));
         break;
       case 'errorHandling':
-        ({ score, findings } = await this.scoreErrorHandling(skill));
+        ({ score, findings } = this.scoreErrorHandling(skill));
         break;
       case 'scope':
-        ({ score, findings } = await this.scoreScope(skill));
+        ({ score, findings } = this.scoreScope(skill));
         break;
       case 'documentation':
-        ({ score, findings } = await this.scoreDocumentation(skill));
+        ({ score, findings } = this.scoreDocumentation(skill));
         break;
       case 'portability':
-        ({ score, findings } = await this.scorePortability(skill));
+        ({ score, findings } = this.scorePortability(skill));
         break;
-      default:
-        findings.push({
-          type: 'warning',
-          message: `Unknown category: ${category.id}`,
-          points: 0
-        });
     }
 
     const percentage = (score / category.maxScore) * 100;
@@ -121,7 +100,7 @@ export class SkillScorer {
     };
   }
 
-  private async scoreStructure(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreStructure(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
 
@@ -231,7 +210,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreClarity(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreClarity(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -337,7 +316,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreSafety(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreSafety(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -497,7 +476,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreDependencies(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreDependencies(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -581,7 +560,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreErrorHandling(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreErrorHandling(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -665,7 +644,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreScope(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreScope(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -778,25 +757,24 @@ export class SkillScorer {
     const hasConflictWarnings = conflictIndicators.some(word => content.includes(word));
     
     if (!hasConflictWarnings) {
-      score += 2;
+      score += 1;
       findings.push({
         type: 'pass',
         message: 'No obvious conflict indicators',
-        points: 2
+        points: 1
       });
     } else {
-      score += 1;
       findings.push({
         type: 'warning',
         message: 'Potential conflicts mentioned',
-        points: 1
+        points: 0
       });
     }
 
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scoreDocumentation(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scoreDocumentation(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent.toLowerCase();
@@ -908,7 +886,7 @@ export class SkillScorer {
     return { score: Math.min(score, 10), findings };
   }
 
-  private async scorePortability(skill: ParsedSkill): Promise<{ score: number; findings: Finding[] }> {
+  private scorePortability(skill: ParsedSkill): { score: number; findings: Finding[] } {
     let score = 0;
     const findings: Finding[] = [];
     const content = skill.skillMdContent;

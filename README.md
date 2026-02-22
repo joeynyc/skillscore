@@ -381,7 +381,7 @@ Options:
 npm test
 
 # Run tests in watch mode
-npm run test:ui
+npm test
 
 # Run tests once
 npm run test:run

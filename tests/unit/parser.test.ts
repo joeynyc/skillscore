@@ -16,8 +16,8 @@ describe('SkillParser', () => {
       const skill = await parser.parseSkill(skillPath);
 
       expect(skill.skillMdExists).toBeTruthy();
-      expect(skill.name).toBe('Perfect Test Skill');
-      expect(skill.description).toContain('comprehensive and well-structured');
+      expect(skill.name).toBe('system-health-checker');
+      expect(skill.description).toBe('Checks system service health and status when the user asks to verify service availability or diagnose outages.');
       expect(skill.skillPath).toBe(skillPath);
       expect(skill.files).toContain('SKILL.md');
       expect(skill.structure.hasSkillMd).toBeTruthy();
@@ -80,7 +80,8 @@ describe('SkillParser', () => {
       const skillPath = path.join(fixturesPath, 'perfect-skill');
       const skill = await parser.parseSkill(skillPath);
       
-      expect(skill.name).toBe('Perfect Test Skill');
+      expect(skill.name).toBe('system-health-checker');
+      expect(skill.nameSource).toBe('frontmatter');
     });
 
     it('should extract names from terrible skills', async () => {

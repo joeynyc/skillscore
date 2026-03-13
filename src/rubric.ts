@@ -8,59 +8,52 @@ export interface ScoringCategory {
 
 export const SCORING_CATEGORIES: ScoringCategory[] = [
   {
-    id: 'structure',
-    name: 'Structure',
-    description: 'SKILL.md exists, clear name/description, follows conventions, clean file organization',
+    id: 'identity',
+    name: 'Identity & Metadata',
+    description: 'YAML frontmatter with valid name/description, proper format, not vague',
+    weight: 0.20,
+    maxScore: 10
+  },
+  {
+    id: 'conciseness',
+    name: 'Conciseness',
+    description: 'Body under 500 lines, progressive disclosure, no over-explaining basics',
     weight: 0.15,
     maxScore: 10
   },
   {
     id: 'clarity',
-    name: 'Clarity',
-    description: 'Specific actionable instructions, no ambiguity, logical order, agent knows what to do',
-    weight: 0.20,
+    name: 'Clarity & Instructions',
+    description: 'Workflow steps, consistent terminology, templates/examples, degrees of freedom',
+    weight: 0.15,
+    maxScore: 10
+  },
+  {
+    id: 'routing',
+    name: 'Routing & Scope',
+    description: 'Description has WHAT+WHEN, negative routing, domain vocabulary, third-person voice',
+    weight: 0.15,
+    maxScore: 10
+  },
+  {
+    id: 'robustness',
+    name: 'Robustness',
+    description: 'Error handling in code, validation steps, no magic constants, dependency verification',
+    weight: 0.10,
     maxScore: 10
   },
   {
     id: 'safety',
-    name: 'Safety',
-    description: 'No destructive commands without confirmation, no secret exfiltration, no unbounded loops, respects permissions',
-    weight: 0.20,
-    maxScore: 10
-  },
-  {
-    id: 'dependencies',
-    name: 'Dependencies',
-    description: 'Lists required tools/APIs, checks before running, install instructions, states env vars',
-    weight: 0.10,
-    maxScore: 10
-  },
-  {
-    id: 'errorHandling',
-    name: 'Error Handling',
-    description: 'Failure instructions, fallbacks, no silent failures, edge cases',
-    weight: 0.10,
-    maxScore: 10
-  },
-  {
-    id: 'scope',
-    name: 'Scope',
-    description: 'Single responsibility, accurate description, specific triggers, no conflicts',
-    weight: 0.10,
-    maxScore: 10
-  },
-  {
-    id: 'documentation',
-    name: 'Documentation',
-    description: 'Usage examples, expected I/O, edge cases, troubleshooting',
-    weight: 0.10,
+    name: 'Safety & Security',
+    description: 'No destructive commands without confirmation, no secret exfil, no privilege escalation',
+    weight: 0.15,
     maxScore: 10
   },
   {
     id: 'portability',
-    name: 'Portability',
-    description: 'Cross-platform, no hardcoded paths, notes limitations, relative paths',
-    weight: 0.05,
+    name: 'Portability & Standards',
+    description: 'No platform-specific paths, MCP tool format, no time-sensitive info, relative paths',
+    weight: 0.10,
     maxScore: 10
   }
 ];

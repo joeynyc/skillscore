@@ -83,14 +83,13 @@ Examples:
   $ skillscore --version                     # Show version number
 
 Scoring Categories:
-  Structure (15%)     - SKILL.md exists, clear name/description
-  Clarity (20%)       - Specific actionable instructions
-  Safety (20%)        - No destructive commands, respects permissions  
-  Dependencies (10%)  - Lists required tools, install instructions
-  Error Handling (10%) - Failure instructions, fallbacks
-  Scope (10%)         - Single responsibility, clear triggers
-  Documentation (10%) - Usage examples, troubleshooting
-  Portability (5%)    - Cross-platform, relative paths
+  Identity (20%)      - Frontmatter name/description, format validation
+  Conciseness (15%)   - Body length, progressive disclosure, no bloat
+  Clarity (15%)       - Workflow steps, examples, degrees of freedom
+  Routing (15%)       - WHAT+WHEN description, negative routing, scope
+  Robustness (10%)    - Error handling, validation, dependency checks
+  Safety (15%)        - No destructive commands, no secret exfil
+  Portability (10%)   - No platform paths, MCP format, no stale info
 
 Grade Scale:
   A+ (97-100%) | A (93-96%) | A- (90-92%)
@@ -304,7 +303,7 @@ Grade Scale:
     console.log('');
 
     // Table header
-    const headers = ['Skill', 'Grade', 'Score', 'Structure', 'Clarity', 'Safety', 'Status'];
+    const headers = ['Skill', 'Grade', 'Score', 'Identity', 'Routing', 'Safety', 'Status'];
     const colWidths: [number, number, number, number, number, number, number] = [30, 6, 8, 9, 7, 6, 10];
     const pad = (s: string, i: number) => s.padEnd(colWidths[i]!);
 
@@ -328,12 +327,12 @@ Grade Scale:
         console.log(chalk.red(cells.join('')));
       } else if (result.score) {
         const score = result.score;
-        const structureCat = score.categoryScores?.find((c: any) => c?.category?.id === 'structure');
-        const clarityCat = score.categoryScores?.find((c: any) => c?.category?.id === 'clarity');
+        const identityCat = score.categoryScores?.find((c: any) => c?.category?.id === 'identity');
+        const routingCat = score.categoryScores?.find((c: any) => c?.category?.id === 'routing');
         const safetyCat = score.categoryScores?.find((c: any) => c?.category?.id === 'safety');
-        
-        const structure = structureCat?.percentage !== undefined ? structureCat.percentage.toFixed(0) : '-';
-        const clarity = clarityCat?.percentage !== undefined ? clarityCat.percentage.toFixed(0) : '-';
+
+        const identity = identityCat?.percentage !== undefined ? identityCat.percentage.toFixed(0) : '-';
+        const routing = routingCat?.percentage !== undefined ? routingCat.percentage.toFixed(0) : '-';
         const safety = safetyCat?.percentage !== undefined ? safetyCat.percentage.toFixed(0) : '-';
         
         const skillName = (score.skill?.name || path.basename(result.path) || 'Unknown').substring(0, colWidths[0] - 1);
@@ -344,8 +343,8 @@ Grade Scale:
           pad(skillName, 0),
           pad(letterGrade, 1),
           pad(percentage + '%', 2),
-          pad(structure + '%', 3),
-          pad(clarity + '%', 4),
+          pad(identity + '%', 3),
+          pad(routing + '%', 4),
           pad(safety + '%', 5),
           pad('OK', 6)
         ];

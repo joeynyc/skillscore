@@ -1,3 +1,8 @@
+---
+name: api-integration
+description: Integrates with various REST APIs using different URL patterns and endpoints when data fetching or authentication is needed.
+---
+
 # API Integration Skill
 
 This skill demonstrates URL handling without false positives for path detection.
@@ -5,6 +10,11 @@ This skill demonstrates URL handling without false positives for path detection.
 ## Description
 
 Integrates with various APIs using different URL patterns and paths.
+
+## When NOT to Use
+
+- Don't use this for local file operations
+- Not for database queries
 
 ## API Endpoints
 
@@ -26,13 +36,13 @@ curl -X POST https://auth.example.com/oauth/token \
 # Fetch data
 curl https://data.example.com/api/v2/fetch?query=test
 
-# Upload file  
+# Upload file
 curl -F "file=@document.pdf" https://files.example.com/upload
 ```
 
 ## Dependencies
 
-- curl for HTTP requests
+- curl for HTTP requests (`curl --version` to verify)
 - Standard Unix tools
 
 ## Notes

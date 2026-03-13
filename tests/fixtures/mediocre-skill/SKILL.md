@@ -1,3 +1,8 @@
+---
+name: File-Backup-Tool
+description: Creates backups of important files to a remote location.
+---
+
 # File Backup Tool
 
 Creates backups of important files to a remote location.
@@ -19,7 +24,7 @@ This skill backs up files when you ask it to. It compresses files and uploads th
 3. Check if it worked
 
 ```bash
-tar -czf backup.tar.gz /home/user/documents/
+tar -czf backup.tar.gz ./documents/
 curl -X POST -F "file=@backup.tar.gz" https://storage.example.com/upload
 ```
 

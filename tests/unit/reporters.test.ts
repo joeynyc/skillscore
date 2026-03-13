@@ -47,7 +47,13 @@ describe('Reporters', () => {
           totalFiles: 1,
           directories: [],
           fileTypes: { '.md': 1 }
-        }
+        },
+        frontmatter: {},
+        bodyContent: 'Test content',
+        bodyLineCount: 1,
+        nameSource: 'heading' as const,
+        descriptionSource: 'inferred' as const,
+        referencedFiles: []
       },
       categoryScores: mockCategoryScores,
       totalScore: mockCategoryScores.reduce((sum, cat) => sum + cat.weightedScore, 0),
@@ -72,9 +78,9 @@ describe('Reporters', () => {
       expect(output).toContain('Test Skill');
       expect(output).toContain('B-');
       expect(output).toContain('80.0%');
-      expect(output).toContain('Structure');
-      expect(output).toContain('Clarity');
-      expect(output).toContain('Safety');
+      expect(output).toContain('Identity & Metadata');
+      expect(output).toContain('Clarity & Instructions');
+      expect(output).toContain('Safety & Security');
     });
 
     it('should include summary section', () => {
@@ -126,18 +132,18 @@ describe('Reporters', () => {
       expect(data.skillName).toBe('Test Skill');
       expect(data.overallScore.percentage).toBe(80);
       expect(data.overallScore.letterGrade).toBe('B-');
-      expect(data.categories).toHaveLength(8);
+      expect(data.categories).toHaveLength(7);
     });
 
     it('should include category details', () => {
       const output = reporter.generateReport(mockScore);
       const data = JSON.parse(output);
       
-      const structureCategory = data.categories.find((cat: any) => cat.id === 'structure');
-      expect(structureCategory).toBeDefined();
-      expect(structureCategory.name).toBe('Structure');
-      expect(structureCategory.weight).toBe(0.15);
-      expect(structureCategory.findings).toHaveLength(2);
+      const identityCategory = data.categories.find((cat: any) => cat.id === 'identity');
+      expect(identityCategory).toBeDefined();
+      expect(identityCategory.name).toBe('Identity & Metadata');
+      expect(identityCategory.weight).toBe(0.20);
+      expect(identityCategory.findings).toHaveLength(2);
     });
 
     it('should round numbers correctly', () => {
@@ -179,15 +185,15 @@ describe('Reporters', () => {
       
       expect(output).toContain('| Category | Score | Percentage | Weight | Weighted Score |');
       expect(output).toContain('|----------|-------|------------|--------|----------------|');
-      expect(output).toContain('Structure'); // Check for category name, emoji may vary
+      expect(output).toContain('Identity & Metadata'); // Check for category name, emoji may vary
     });
 
     it('should include category details', () => {
       const output = reporter.generateReport(mockScore);
       
       expect(output).toContain('### '); // Category section headers
-      expect(output).toContain('Structure'); // Category name
-      expect(output).toContain('**Weight:** 15%');
+      expect(output).toContain('Identity & Metadata'); // Category name
+      expect(output).toContain('**Weight:** 20%');
       expect(output).toContain('✅ **Passed:**');
       expect(output).toContain('⚠️ **Warnings:**');
     });

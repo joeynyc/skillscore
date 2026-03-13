@@ -10,8 +10,14 @@ export interface ParsedSkill {
   name: string;
   description: string;
   files: string[];
-  metadata: any;
+  metadata: Record<string, unknown>;
   structure: FileStructure;
+  frontmatter: Record<string, unknown>;
+  bodyContent: string;
+  bodyLineCount: number;
+  nameSource: 'frontmatter' | 'heading' | 'fallback';
+  descriptionSource: 'frontmatter' | 'inline' | 'inferred' | 'none';
+  referencedFiles: string[];
 }
 
 export interface FileStructure {
@@ -27,7 +33,7 @@ export interface FileStructure {
 export class SkillParser {
   async parseSkill(skillPath: string): Promise<ParsedSkill> {
     const absolutePath = path.resolve(skillPath);
-    
+
     if (!await fs.pathExists(absolutePath)) {
       throw new Error(`Skill path does not exist: ${absolutePath}`);
     }
@@ -39,7 +45,7 @@ export class SkillParser {
 
     const skillMdPath = path.join(absolutePath, 'SKILL.md');
     const skillMdExists = await fs.pathExists(skillMdPath);
-    
+
     let skillMdContent = '';
     if (skillMdExists) {
       skillMdContent = await fs.readFile(skillMdPath, 'utf-8');
@@ -48,16 +54,28 @@ export class SkillParser {
     const files = await this.getAllFiles(absolutePath);
     const structure = this.analyzeStructure(files);
     const frontmatter = this.parseFrontmatter(skillMdContent);
+    const bodyContent = this.stripFrontmatter(skillMdContent);
+    const bodyLineCount = bodyContent ? bodyContent.split('\n').length : 0;
+    const referencedFiles = this.extractReferencedFiles(skillMdContent);
+
+    const { name, nameSource } = this.extractNameWithSource(skillMdContent, absolutePath, frontmatter);
+    const { description, descriptionSource } = this.extractDescriptionWithSource(skillMdContent, frontmatter);
 
     return {
       skillPath: absolutePath,
       skillMdExists,
       skillMdContent,
-      name: this.extractName(skillMdContent, absolutePath, frontmatter),
-      description: this.extractDescription(skillMdContent, frontmatter),
+      name,
+      description,
       files,
       metadata: frontmatter,
-      structure
+      structure,
+      frontmatter,
+      bodyContent,
+      bodyLineCount,
+      nameSource,
+      descriptionSource,
+      referencedFiles
     };
   }
 
@@ -82,7 +100,7 @@ export class SkillParser {
     for (const file of files) {
       const ext = path.extname(file).toLowerCase();
       fileTypes[ext] = (fileTypes[ext] || 0) + 1;
-      
+
       const dir = path.dirname(file);
       if (dir !== '.') {
         const firstDir = dir.split('/')[0];
@@ -103,12 +121,12 @@ export class SkillParser {
     };
   }
 
-  private parseFrontmatter(content: string): any {
+  private parseFrontmatter(content: string): Record<string, unknown> {
     if (!content) return {};
     const match = content.match(/^---\n(.*?)\n---/s);
     if (match && match[1]) {
       try {
-        return yaml.parse(match[1]) || {};
+        return (yaml.parse(match[1]) as Record<string, unknown>) || {};
       } catch {
         return {};
       }
@@ -116,34 +134,59 @@ export class SkillParser {
     return {};
   }
 
-  private extractName(content: string, skillPath: string, frontmatter: any): string {
-    if (!content) return path.basename(skillPath);
-
-    const headingMatch = content.match(/^# (.+)$/m);
-    if (headingMatch && headingMatch[1]) return headingMatch[1].trim();
-
-    if (frontmatter.name) return frontmatter.name;
-
-    const nameMatch = content.match(/^name:\s*(.+)$/m);
-    if (nameMatch && nameMatch[1]) return nameMatch[1].trim();
-
-    return path.basename(skillPath);
+  private stripFrontmatter(content: string): string {
+    if (!content) return '';
+    return content.replace(/^---\n.*?\n---\n?/s, '');
   }
 
-  private extractDescription(content: string, frontmatter: any): string {
-    if (!content) return '';
+  private extractReferencedFiles(content: string): string[] {
+    if (!content) return [];
+    // Match markdown links to files: [text](path) where path looks like a file
+    const linkPattern = /\[[^\]]*\]\(([^)]+)\)/g;
+    const refs: string[] = [];
+    let match;
+    while ((match = linkPattern.exec(content)) !== null) {
+      const ref = match[1];
+      if (ref && !ref.startsWith('http') && !ref.startsWith('#')) {
+        refs.push(ref);
+      }
+    }
+    return refs;
+  }
 
-    if (frontmatter.description) return frontmatter.description;
+  private extractNameWithSource(content: string, skillPath: string, frontmatter: Record<string, unknown>): { name: string; nameSource: 'frontmatter' | 'heading' | 'fallback' } {
+    if (frontmatter.name && typeof frontmatter.name === 'string') {
+      return { name: frontmatter.name, nameSource: 'frontmatter' };
+    }
+
+    if (content) {
+      const headingMatch = content.match(/^# (.+)$/m);
+      if (headingMatch && headingMatch[1]) {
+        return { name: headingMatch[1].trim(), nameSource: 'heading' };
+      }
+    }
+
+    return { name: path.basename(skillPath), nameSource: 'fallback' };
+  }
+
+  private extractDescriptionWithSource(content: string, frontmatter: Record<string, unknown>): { description: string; descriptionSource: 'frontmatter' | 'inline' | 'inferred' | 'none' } {
+    if (frontmatter.description && typeof frontmatter.description === 'string') {
+      return { description: frontmatter.description, descriptionSource: 'frontmatter' };
+    }
+
+    if (!content) return { description: '', descriptionSource: 'none' };
 
     const descMatch = content.match(/^description:\s*(.+)$/m);
-    if (descMatch && descMatch[1]) return descMatch[1].trim();
+    if (descMatch && descMatch[1]) {
+      return { description: descMatch[1].trim(), descriptionSource: 'inline' };
+    }
 
     const afterHeading = content.replace(/^#[^\n]*\n\s*\n/, '');
     const paragraphMatch = afterHeading.match(/^(.+?)(?:\n\s*\n|\n#|$)/s);
     if (paragraphMatch && paragraphMatch[1]) {
-      return paragraphMatch[1].trim().replace(/\n/g, ' ');
+      return { description: paragraphMatch[1].trim().replace(/\n/g, ' '), descriptionSource: 'inferred' };
     }
 
-    return '';
+    return { description: '', descriptionSource: 'none' };
   }
 }

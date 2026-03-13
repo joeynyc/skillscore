@@ -76,13 +76,10 @@ skillscore ./skills/my-skill/ --verbose
 
 ```bash
 # Full GitHub URL (always recognized)
-skillscore https://github.com/vercel-labs/skills/tree/main/skills/find-skills
+skillscore https://github.com/FrancyJGLisboa/agent-skill-creator
 
 # GitHub shorthand (requires -g/--github flag)
-skillscore -g vercel-labs/skills/find-skills
-
-# Anthropic skills
-skillscore -g anthropic/skills/skill-creator
+skillscore -g FrancyJGLisboa/agent-skill-creator
 ```
 
 ### Output Formats
@@ -365,6 +362,32 @@ async function evaluateSkill(skillPath: string): Promise<SkillScore> {
 
 All three reporters (`TerminalReporter`, `JsonReporter`, `MarkdownReporter`) implement the `Reporter` interface.
 
+### ParsedSkill Fields (v2.0)
+
+The parser now extracts additional metadata used by the new scoring rubric:
+
+```typescript
+interface ParsedSkill {
+  // Existing fields
+  skillPath: string;
+  skillMdExists: boolean;
+  skillMdContent: string;
+  name: string;
+  description: string;
+  files: string[];
+  metadata: Record<string, unknown>;
+  structure: FileStructure;
+
+  // New in v2.0
+  frontmatter: Record<string, unknown>;    // YAML frontmatter (same ref as metadata)
+  bodyContent: string;                      // SKILL.md after stripping frontmatter
+  bodyLineCount: number;                    // Line count of body
+  nameSource: 'frontmatter' | 'heading' | 'fallback';
+  descriptionSource: 'frontmatter' | 'inline' | 'inferred' | 'none';
+  referencedFiles: string[];               // Markdown links extracted from SKILL.md
+}
+```
+
 ## 🛠️ CLI Options
 
 ```
@@ -493,11 +516,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Example Scores
 
-Here are some real-world examples of how different skills score:
+Real-world skills scored with SkillScore v2.0:
 
-- **Vercel find-skills**: 85% (B) - Well-structured, good documentation
-- **Anthropic frontend-design**: 87% (B+) - Excellent clarity, minor dependency issues  
-- **Anthropic skill-creator**: 92% (A-) - Outstanding overall, minor safety concerns
+- **FrancyJGLisboa/agent-skill-creator**: 83.5% (B) - Perfect identity & robustness, needs negative routing and trimming (617 lines)
+- **gapmiss/obsidian-plugin-skill**: 52% (F) - No frontmatter, weak routing signals, missing structured workflow
+- **skill-creator** (local): 86% (B) - Strong identity & conciseness (353 lines, 6 file refs), needs error handling in code blocks
 
 ---
 

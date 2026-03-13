@@ -17,7 +17,7 @@
 
 ## ✨ Features
 
-- 🎯 **Comprehensive Evaluation**: 8 scoring categories with weighted importance
+- 🎯 **Comprehensive Evaluation**: 7 Anthropic-aligned scoring categories with weighted importance
 - 🎨 **Multiple Output Formats**: Terminal (colorful), JSON, and Markdown reports
 - 🔍 **Deterministic Analysis**: Reliable, reproducible scoring without requiring API keys
 - 📋 **Detailed Feedback**: Specific findings and actionable recommendations
@@ -129,8 +129,8 @@ skillscore --help
 📊 SKILLSCORE EVALUATION REPORT
 ============================================================
 
-📋 Skill: Weather Information Fetcher
-   Fetches current weather data for any city using OpenWeatherMap API
+📋 Skill: weather-fetcher
+   Fetches current weather data for any city when the user asks for forecasts or conditions.
    Path: ./weather-skill
 
 🎯 OVERALL SCORE
@@ -138,35 +138,35 @@ skillscore --help
 
 📝 CATEGORY BREAKDOWN
 ------------------------------------------------------------
-Structure ████████████████████ 100.0%
-   SKILL.md exists, clear name/description, follows conventions
-   Score: 10/10 (weight: 15%)
-   ✓ SKILL.md file exists (+3)
-   ✓ Clear skill name: "Weather Information Fetcher" (+2)
-   ✓ Clear description provided (+2)
-   ... 2 more findings
+Identity & Metadata ████████████████████ 100.0%
+   YAML frontmatter with valid name/description, proper format, not vague
+   Score: 10/10 (weight: 20%)
+   ✓ Frontmatter name: "weather-fetcher" (+2)
+   ✓ Name format valid (lowercase-hyphen, ≤64 chars) (+2)
+   ✓ Frontmatter description present (+2)
+   ... 3 more findings
 
-Clarity ██████████████████░░ 90.0%
-   Specific actionable instructions, no ambiguity, logical order
-   Score: 9/10 (weight: 20%)
-   ✓ Contains specific step-by-step instructions with commands (+3)
-   ✓ No ambiguous language detected (+3)
-   ✓ Instructions follow logical order (+2)
-   ... 1 more finding (use --verbose to see all)
+Clarity & Instructions ██████████████████░░ 90.0%
+   Workflow steps, consistent terminology, templates/examples, degrees of freedom
+   Score: 9/10 (weight: 15%)
+   ✓ Has structured workflow steps (numbered lists or checklists) (+3)
+   ✓ Consistent terminology throughout (+2)
+   ✓ 4 code blocks with templates/examples (+2)
+   ... 2 more findings (use --verbose to see all)
 
-Safety ██████████████░░░░░░ 70.0%
-   No destructive commands, respects permissions
-   Score: 7/10 (weight: 20%)
+Safety & Security ██████████████░░░░░░ 70.0%
+   No destructive commands without confirmation, no secret exfil, no privilege escalation
+   Score: 7/10 (weight: 15%)
    ✓ No dangerous destructive commands found (+3)
-   ✓ No obvious secret exfiltration risks (+3)
-   ✗ Some potential security concerns detected
+   ✓ No secret exfiltration risk detected (+2)
+   ⚠ Privilege escalation with justification: sudo (+1)
 
 📈 SUMMARY
 ------------------------------------------------------------
-✅ Strengths: Structure, Clarity, Dependencies, Documentation
-❌ Areas for improvement: Safety
+✅ Strengths: Identity & Metadata, Conciseness, Clarity & Instructions, Routing & Scope
+❌ Areas for improvement: Safety & Security
 
-Generated: 2/11/2026, 3:15:49 PM
+Generated: 3/13/2026, 1:37:51 AM
 ```
 
 ### Batch Mode Output
@@ -185,10 +185,10 @@ Evaluating 3 skill(s)...
 
 📋 COMPARISON SUMMARY
 
-Skill                          Grade  Score    Structure Clarity Safety Status    
-Weather Information Fetcher    A-     92.0%    100%      90%     70%    OK        
-File Backup Tool              B+     87.0%    95%       85%     90%    OK        
-Advanced Data Processor       A      94.0%    100%      95%     85%    OK        
+Skill                          Grade  Score    Identity Routing Safety Status
+weather-fetcher                A-     92.0%    100%     100%    70%    OK
+file-backup                    B+     87.0%    90%      80%     90%    OK
+data-processor                 A      94.0%    100%     100%    85%    OK
 
 📈 BATCH SUMMARY
 ✅ Successful: 3
@@ -197,43 +197,43 @@ Advanced Data Processor       A      94.0%    100%      95%     85%    OK
 
 ## 🏆 Scoring System
 
-SkillScore evaluates skills across **8 weighted categories**:
+SkillScore evaluates skills across **7 weighted categories** aligned with [Anthropic's official skill documentation](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills):
 
 | Category | Weight | Description |
 |----------|--------|-------------|
-| **Structure** | 15% | SKILL.md exists, clear name/description, file organization, artifact output spec |
-| **Clarity** | 20% | Specific actionable instructions, no ambiguity, logical order |
-| **Safety** | 20% | No destructive commands, respects permissions, network containment |
-| **Dependencies** | 10% | Lists required tools/APIs, install instructions, env vars |
-| **Error Handling** | 10% | Failure instructions, fallbacks, no silent failures |
-| **Scope** | 10% | Single responsibility, routing quality, negative examples |
-| **Documentation** | 10% | Usage examples, embedded templates, expected I/O |
-| **Portability** | 5% | Cross-platform, no hardcoded paths, relative paths |
+| **Identity & Metadata** | 20% | YAML frontmatter name/description, lowercase-hyphen format, not vague |
+| **Conciseness** | 15% | Body ≤500 lines, progressive disclosure, no over-explaining basics |
+| **Clarity & Instructions** | 15% | Workflow steps, consistent terminology, templates/examples, degrees of freedom |
+| **Routing & Scope** | 15% | WHAT+WHEN description, negative routing, domain vocabulary, third-person voice |
+| **Robustness** | 10% | Error handling in code blocks, validation steps, dependency verification |
+| **Safety & Security** | 15% | No destructive commands, proximity-based secret exfil detection, no privilege escalation |
+| **Portability & Standards** | 10% | No platform-specific paths, MCP tool format, no time-sensitive info, relative paths |
 
 ### Scoring Methodology
 
 Each category is scored from 0-10 points based on specific criteria:
 
-- **Structure**: Checks for SKILL.md existence, clear naming, proper organization, and whether outputs/artifacts are defined
-- **Clarity**: Analyzes instruction specificity, ambiguity, logical flow
-- **Safety**: Scans for destructive commands, security risks, permission issues, and network containment (does the skill scope network access when using HTTP/APIs?)
-- **Dependencies**: Validates tool listings, installation instructions, environment setup
-- **Error Handling**: Reviews error scenarios, fallback strategies, validation
-- **Scope**: Assesses single responsibility, trigger clarity, conflict potential, **negative routing examples** ("don't use when..."), and **routing quality** (concrete signals vs vague descriptions)
-- **Documentation**: Evaluates examples, I/O documentation, troubleshooting guides, and **embedded templates/worked examples** with expected output
-- **Portability**: Checks cross-platform compatibility, path handling, limitations
+- **Identity & Metadata**: Validates YAML frontmatter `name` (lowercase-hyphen, ≤64 chars, no reserved words) and `description` (≤1024 chars, third person, no XML tags), rejects vague names/descriptions
+- **Conciseness**: Enforces the 500-line body limit, checks for progressive disclosure via file references, flags over-explaining basics Claude already knows
+- **Clarity & Instructions**: Checks for numbered steps or checklists, consistent terminology (no synonym pairs used interchangeably), code block examples, and a mix of imperative ("must") and flexible ("consider") guidance
+- **Routing & Scope**: Validates description has action verbs + trigger conditions, negative routing examples ("don't use when..."), domain-specific vocabulary, and third-person voice
+- **Robustness**: Scans code blocks for error handling (try/catch, `||`, `set -e`), validates dependency verification commands (`--version`, `command -v`), flags magic constants
+- **Safety & Security**: Proximity-based secret exfil detection (secrets + network within 5 lines), destructive command scanning with confirmation check, privilege escalation detection, unbounded loop detection
+- **Portability & Standards**: Flags Windows-style paths, hardcoded absolute paths, validates MCP tool `ServerName:tool_name` format, detects time-sensitive info (dates, pinned versions)
 
-### v1.1.0: Production-Validated Checks
+### v2.0.0: Anthropic-Aligned Rubric
 
-Five new sub-criteria added in v1.1.0, inspired by [OpenAI's Skills + Shell + Compaction blog](https://developers.openai.com/blog/skills-shell-tips) and production data from Glean:
+Complete scoring redesign replacing the original 8 generic categories with 7 categories aligned to Anthropic's official skill documentation:
 
-| Check | Category | Points | Why It Matters |
-|-------|----------|--------|----------------|
-| **Negative routing examples** | Scope | 2 | Skills that say when NOT to use them trigger ~20% more accurately (Glean data) |
-| **Routing quality** | Scope | 1 | Descriptions with concrete tool names, I/O, and "use when" patterns route better than marketing copy |
-| **Embedded templates** | Documentation | 2 | Real output templates inside the skill drove the biggest quality + latency gains in production |
-| **Network containment** | Safety | 1 | Skills combining tools + open network access are a data exfiltration risk without scoping |
-| **Artifact output spec** | Structure | 1 | Skills that define where outputs go create clean review boundaries |
+| Change | Details |
+|--------|---------|
+| **Frontmatter validation** | Skills must have YAML frontmatter with `name` and `description` fields |
+| **Name format checks** | Names must be lowercase-hyphen (`^[a-z0-9][a-z0-9-]*$`), ≤64 chars, no reserved words |
+| **Conciseness scoring** | New category enforcing 500-line limit, progressive disclosure, no over-explaining |
+| **Third-person detection** | Descriptions should use third-person voice, not "I/We/My" |
+| **Proximity-based exfil** | Secret + network pattern detection within 5-line proximity windows |
+| **MCP format validation** | MCP tool references must use `ServerName:tool_name` format |
+| **Time-sensitive detection** | Flags specific dates, "as of", and pinned version references |
 
 ### Grade Scale
 
@@ -272,9 +272,14 @@ my-skill/
 ### SKILL.md Template
 
 ```markdown
+---
+name: my-awesome-skill
+description: Performs [specific task] when the user needs to [trigger condition].
+---
+
 # My Awesome Skill
 
-Brief description of what this skill does and when to use it.
+Performs [specific task] using [specific tools/inputs].
 
 ## When to Use
 
@@ -288,15 +293,18 @@ Don't use this skill when:
 
 ## Dependencies
 
-- Tool 1: Installation instructions
+- Tool 1: Installation instructions (`tool --version` to verify)
 - API Key: How to obtain and configure
 - Environment: OS requirements
 
-## Usage
+## Workflow
 
 1. Step-by-step instructions
 2. Specific commands to run
 3. Expected outputs
+
+- [ ] Verify dependencies
+- [ ] Confirm configuration
 
 ## Output
 
@@ -304,9 +312,14 @@ Results are written to `./output/` as JSON files.
 
 ## Error Handling
 
-- Common issues and solutions
-- Fallback strategies
-- Validation steps
+You must always validate output. Consider retrying on transient failures.
+
+```bash
+if ! result=$(./scripts/main.py --input "data"); then
+  echo "Error: processing failed"
+  exit 1
+fi
+```
 
 ## Examples
 
@@ -319,16 +332,13 @@ Results are written to `./output/` as JSON files.
 }
 ```
 
-```bash
-# Working example
-./scripts/main.py --input "test data"
-```
-
 ## Limitations
 
 - Known constraints
 - Platform-specific notes
 - Edge cases
+
+See [docs/advanced.md](docs/advanced.md) for more details.
 ```
 
 ## 🔧 API Usage
@@ -479,7 +489,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Inspired by the need for quality assessment in AI agent skills
 - Built for the OpenClaw and Claude Code communities
 - Thanks to all contributors and skill creators
-- Scoring methodology informed by software engineering best practices and [OpenAI's production skill patterns](https://developers.openai.com/blog/skills-shell-tips)
+- Scoring methodology aligned with [Anthropic's official skill documentation](https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills)
 
 ## 📊 Example Scores
 
